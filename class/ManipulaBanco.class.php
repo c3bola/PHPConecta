@@ -1,18 +1,25 @@
 <?php
 include_once ('../function/conexao.php');
 class ManipulaBanco {
-	function inserirRegistro($tabela, $data) {
+	function inserirRegistro($tabela, $data, $last=false) {
 		try{
 			$conexao = conexaoDb();
 			$fildes = implode(', ', array_keys($data));
 			$values = ":" . implode(', :', array_keys($data));
-			$db_inserir = $conexao -> prepare("INSERT INTO {$tabela} ({$fildes})VALUES({$values})");
+			$db_inserir = $conexao -> prepare("INSERT INTO {$tabela} ({$fildes}) VALUES ({$values})");
 			foreach ($data as $key => $valor) {
 				$db_inserir -> bindValue($key, $valor);
 			}
-			//var_dump($db_inserir);
+		/*	echo "<pre>";
+			var_dump($db_inserir);
+			echo "</pre>";*/
 			$db_inserir -> execute();
-			return true;
+			if($last==true){
+				return $conexao->lastInsertId(); 
+			}else{
+				return false;
+			}
+			
 		} catch(PDOException $erro_log) {			
 			switch ($erro_log -> getCode()) {
 				case '23000':
@@ -48,6 +55,7 @@ class ManipulaBanco {
 			foreach ($data as $key => $valor) {
 				$db_atualiza -> bindValue($key, $valor);
 			}
+			
 			$db_atualiza -> execute();
 			$db_atualiza = NULL;
 			return true;
@@ -63,12 +71,13 @@ class ManipulaBanco {
 			foreach ($alvo as $key => $value) {
 				$fildes[] = $key . "= :" . $key;
 			}
-			$fildes = implode(', ', $fildes);
+			$fildes = implode(' AND ', $fildes);
 			$conexao = conexaoDb();
 			$db_deleta = $conexao -> prepare("DELETE FROM {$tabela} WHERE {$fildes}");
 			foreach ($alvo as $key => $valor) {
 				$db_deleta -> bindValue($key, $valor);
 			}
+			var_dump($db_deleta);
 			$db_deleta -> execute();
 			return TRUE;
 		} catch(PDOException $erro_log) {
